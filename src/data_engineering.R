@@ -141,7 +141,88 @@ write_csv(
 
 
 # Exercise 4
+# 1. Build event-level watch_log
+watch_log <- impressions %>%
+  left_join(
+    watch_events,
+    by = "impression_id",
+    suffix = c("", "_watch")
+  ) %>%
+  left_join(
+    sessions,
+    by = c("session_id", "user_id")
+  ) %>%
+  left_join(
+    videos,
+    by = c("video_id", "creator_id")
+  ) %>%
+  left_join(
+    creators,
+    by = "creator_id"
+  )
+
+
+# 2. Keep impressions that have a watch event
+watched_only <- impressions %>%
+  inner_join(
+    watch_events,
+    by = "impression_id"
+  )
+
+
+# 3. Create creator event summary
+creator_event_summary <- watch_log %>%
+  group_by(
+    creator_id,
+    creator_name
+  ) %>%
+  summarise(
+    impressions = n_distinct(impression_id),
+    watched_events = sum(!is.na(watch_event_id)),
+    total_watch_seconds = sum(watch_seconds.y, na.rm = TRUE),
+    .groups = "drop"
+  )
+
+
+# 4. Save outputs
+write_csv(watch_log, "temp/watch_log.csv")
+write_csv(
+  creator_event_summary,
+  "temp/creator_event_summary.csv"
+)
 
 
 
 # Exercise 5
+watch_time_preview <- watch_log %>%
+  mutate(
+    shown_ts = as.POSIXct(shown_at,
+                          format = "%Y-%m-%dT%H:%M:%SZ",
+                          tz = "UTC"),
+    shown_day = as.Date(shown_ts)
+  ) %>%
+  select(impression_id, creator_id, shown_at, shown_ts, shown_day) %>%
+  head(8)
+
+creator_daily <- watch_log %>%
+  mutate(
+    shown_ts = as.POSIXct(
+      shown_at,
+      format = "%Y-%m-%dT%H:%M:%SZ",
+      tz = "UTC"
+    ),
+    shown_day = as.Date(shown_ts)
+  ) %>%
+  count(creator_id, shown_day, name = "impressions_n") %>%
+  group_by(creator_id) %>%
+  arrange(shown_day) %>%
+  mutate(
+    impressions_lag1 = lag(impressions_n)
+  )
+                               
+
+
+
+
+
+
