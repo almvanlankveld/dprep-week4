@@ -1,0 +1,16 @@
+# Raw data: downloaded, never committed
+data/*.csv
+
+# Generated outputs: reproducible from src/, never committed
+temp/*.csv
+output/*.csv
+
+# R session cruft
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj
+
+# OS cruft
+.DS_Store
+Thumbs.db
